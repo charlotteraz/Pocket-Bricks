@@ -24,6 +24,9 @@ type BuildStore = {
   exitPlayback: () => void
   nextStep: () => void
   prevStep: () => void
+
+  started: boolean
+  start: () => void
 }
 
 const ROTATIONS: Rotation[] = [0, 90, 180, 270]
@@ -50,4 +53,7 @@ export const useBuildStore = create<BuildStore>((set) => ({
   exitPlayback: () => set({ mode: 'edit' }),
   nextStep: () => set((state) => ({ step: Math.min(state.step + 1, state.bricks.length) })),
   prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 0) })),
+
+  started: false,
+  start: () => set({ started: true }),
 }))

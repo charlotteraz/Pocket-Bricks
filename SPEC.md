@@ -52,6 +52,12 @@ Verified: `hasCollision`/`buildOccupancy` pure-logic checks (same-cell block, cr
 
 `CameraFramer.tsx` lerps the `OrbitControls` target toward the current playback step's brick center each frame; it's a no-op in edit mode so it never fights the builder's manual camera control.
 
+## Polish
+
+- **Material/lighting**: `Brick.tsx` uses `meshStandardMaterial` (roughness 0.3, metalness 0.05) for a glossy-plastic sheen. A `meshPhysicalMaterial` clearcoat was tried first per the plan's wording, but clearcoat needs environment reflections to read correctly — without one it just washes the base color out under plain directional lights, and a procedural (no-CDN) environment via three's `RoomEnvironment`/`PMREMGenerator` didn't fix that within a reasonable tuning budget. Standard material at low roughness gives a convincing sheen without that failure mode. Lighting is one shadow-casting key light plus two dim fill/rim lights and ambient (`Scene.tsx`); `ContactShadows` (drei) grounds the bricks with a soft local shadow, no HDR/CDN dependency either.
+- **Snap + bounce**: `src/lib/sound.ts` synthesizes a short click via the Web Audio API (no audio asset). `PlacedBrick.tsx` plays a one-shot scale-bounce whenever it *mounts* — which happens for a genuinely new brick appended in edit mode, or a newly-revealed solid brick when stepping forward in playback (both use stable `key={i}`, so already-existing indices never remount). Sound is triggered explicitly at the two placement call sites (`BuildScene.tryPlace`, `PlaybackControls`' Next) rather than tied to mount, so a bulk `loadBricks` import doesn't fire a stampede of sounds — the bounce animation is harmless in bulk, but N simultaneous clicks would not be.
+- **Start/finish**: `started: boolean` in the store gates a `StartScreen` overlay shown until dismissed (`App.tsx`). The playback "Build complete" state (added in phase 6) got a green highlight and checkmark as the finish-state polish.
+
 ## Grid units
 
 Defined in `src/lib/grid.ts` — import from there rather than hardcoding.

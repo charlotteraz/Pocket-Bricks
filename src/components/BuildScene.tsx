@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
-import { GRID_SIZE, STUD, BRICK_HEIGHT, cellFromPoint, clampToBaseplate } from '../lib/grid'
+import { GRID_SIZE, STUD, cellFromPoint, clampToBaseplate } from '../lib/grid'
 import { effectiveFootprint } from '../lib/bricks'
 import { buildOccupancy, hasCollision, layerFromY, yFromLayer } from '../lib/occupancy'
+import { playSnapSound } from '../lib/sound'
 import { useBuildStore } from '../store/useBuildStore'
 import Brick from './bricks/Brick'
+import PlacedBrick from './bricks/PlacedBrick'
 
 type HoverCell = { cellX: number; cellZ: number; layer: number }
 
@@ -40,6 +42,7 @@ export default function BuildScene() {
       rotation: activeRotation,
       color: activeColor,
     })
+    playSnapSound()
   }
 
   const anchor = hovered
@@ -63,11 +66,7 @@ export default function BuildScene() {
 
         {bricks.slice(0, step).map((brick, i) => {
           const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)
-          return (
-            <group key={i} position={brick.position}>
-              <Brick studsX={fx} studsZ={fz} color={brick.color} />
-            </group>
-          )
+          return <PlacedBrick key={i} brick={brick} footprintX={fx} footprintZ={fz} />
         })}
 
         {targetBrick && (
@@ -116,30 +115,24 @@ export default function BuildScene() {
         }
 
         return (
-          <group key={i} position={brick.position}>
-            <Brick studsX={fx} studsZ={fz} color={brick.color} />
-            {/* Invisible full-volume collider: whichever brick's box the
-                pointer ray actually hits (nearest to camera wins) is what
-                the next brick stacks on top of, regardless of which face
-                was clicked. */}
-            <mesh
-              position={[(fx * STUD) / 2, BRICK_HEIGHT / 2, (fz * STUD) / 2]}
-              onPointerMove={(e) => {
-                e.stopPropagation()
-                const [hx, hz] = hoverCellFromEvent(e)
-                setHovered({ cellX: hx, cellZ: hz, layer: layer + 1 })
-              }}
-              onPointerOut={() => setHovered(null)}
-              onClick={(e) => {
-                e.stopPropagation()
-                const [hx, hz] = hoverCellFromEvent(e)
-                tryPlace(hx, hz, layer + 1)
-              }}
-            >
-              <boxGeometry args={[fx * STUD, BRICK_HEIGHT, fz * STUD]} />
-              <meshBasicMaterial visible={false} />
-            </mesh>
-          </group>
+          <PlacedBrick
+            key={i}
+            brick={brick}
+            footprintX={fx}
+            footprintZ={fz}
+            interactive
+            onColliderPointerMove={(e) => {
+              e.stopPropagation()
+              const [hx, hz] = hoverCellFromEvent(e)
+              setHovered({ cellX: hx, cellZ: hz, layer: layer + 1 })
+            }}
+            onColliderPointerOut={() => setHovered(null)}
+            onColliderClick={(e) => {
+              e.stopPropagation()
+              const [hx, hz] = hoverCellFromEvent(e)
+              tryPlace(hx, hz, layer + 1)
+            }}
+          />
         )
       })}
 

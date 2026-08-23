@@ -11,6 +11,25 @@ type BrickProps = {
   opacity?: number
 }
 
+type PlasticProps = { color: string; opacity: number; transparent: boolean }
+
+// Glossy injection-molded plastic look via a tight, low-roughness specular
+// highlight -- per the plan's "single biggest visual upgrade for the least
+// effort." A full clearcoat layer needs environment reflections to read
+// correctly and just washes the color out under plain directional lights,
+// so this stays on meshStandardMaterial rather than chasing full PBR here.
+function Plastic({ color, opacity, transparent }: PlasticProps) {
+  return (
+    <meshStandardMaterial
+      color={color}
+      transparent={transparent}
+      opacity={opacity}
+      roughness={0.3}
+      metalness={0.05}
+    />
+  )
+}
+
 // Local origin is the footprint's min corner (0, 0, 0); the brick extends
 // toward +X/+Z by studsX/studsZ, matching the grid anchor convention.
 export default function Brick({
@@ -37,7 +56,7 @@ export default function Brick({
         <boxGeometry
           args={[studsX * STUD * BODY_INSET, BRICK_HEIGHT, studsZ * STUD * BODY_INSET]}
         />
-        <meshStandardMaterial color={color} transparent={transparent} opacity={opacity} />
+        <Plastic color={color} opacity={opacity} transparent={transparent} />
       </mesh>
       {studs.map(([sx, sz], i) => (
         <mesh
@@ -46,7 +65,7 @@ export default function Brick({
           castShadow
         >
           <cylinderGeometry args={[STUD_RADIUS, STUD_RADIUS, STUD_HEIGHT, 16]} />
-          <meshStandardMaterial color={color} transparent={transparent} opacity={opacity} />
+          <Plastic color={color} opacity={opacity} transparent={transparent} />
         </mesh>
       ))}
     </group>
