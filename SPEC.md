@@ -28,7 +28,15 @@ type Build = Brick[]
 
 ## Grid units
 
-TBD — decided in Phase 1 (grid & camera). Record the stud unit size and plate-height ratio (1 brick = 3 plates) here once fixed, so later phases and AI sessions stay consistent.
+Defined in `src/lib/grid.ts` — import from there rather than hardcoding.
+
+- `STUD = 1` world unit — the X/Z footprint spacing. A brick's `position` in the data model above is in studs.
+- `PLATE_HEIGHT = 0.4` — a plate's height.
+- `BRICK_HEIGHT = PLATE_HEIGHT * 3 = 1.2` — a brick is 3 plates tall.
+
+These ratios match real LEGO proportions (8mm stud pitch : 3.2mm plate height = 1 : 0.4), just scaled to a stud = 1 world unit.
+
+- `GRID_SIZE = 32` — baseplate footprint, in studs.
 
 ## Cut for v1
 
