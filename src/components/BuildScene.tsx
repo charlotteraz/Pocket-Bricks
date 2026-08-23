@@ -10,6 +10,8 @@ type HoverCell = { cellX: number; cellZ: number; layer: number }
 
 export default function BuildScene() {
   const [hovered, setHovered] = useState<HoverCell | null>(null)
+  const mode = useBuildStore((s) => s.mode)
+  const step = useBuildStore((s) => s.step)
   const bricks = useBuildStore((s) => s.bricks)
   const addBrick = useBuildStore((s) => s.addBrick)
   const activeType = useBuildStore((s) => s.activeType)
@@ -18,12 +20,13 @@ export default function BuildScene() {
   const rotateActive = useBuildStore((s) => s.rotateActive)
 
   useEffect(() => {
+    if (mode !== 'edit') return
     function onKeyDown(e: KeyboardEvent) {
       if (e.key.toLowerCase() === 'r') rotateActive()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [rotateActive])
+  }, [mode, rotateActive])
 
   const occupancy = useMemo(() => buildOccupancy(bricks), [bricks])
   const [activeFootprintX, activeFootprintZ] = effectiveFootprint(activeType, activeRotation)
@@ -46,6 +49,35 @@ export default function BuildScene() {
     hovered !== null &&
     anchor !== null &&
     hasCollision(occupancy, anchor[0], anchor[1], activeFootprintX, activeFootprintZ, hovered.layer)
+
+  if (mode === 'playback') {
+    const targetBrick = bricks[step]
+    const [tfx, tfz] = targetBrick ? effectiveFootprint(targetBrick.type, targetBrick.rotation) : [0, 0]
+    return (
+      <>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
+          <meshStandardMaterial color="#e5e4e7" />
+        </mesh>
+        <gridHelper args={[GRID_SIZE, GRID_SIZE, '#999999', '#bbbbbb']} />
+
+        {bricks.slice(0, step).map((brick, i) => {
+          const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)
+          return (
+            <group key={i} position={brick.position}>
+              <Brick studsX={fx} studsZ={fz} color={brick.color} />
+            </group>
+          )
+        })}
+
+        {targetBrick && (
+          <group position={targetBrick.position}>
+            <Brick studsX={tfx} studsZ={tfz} color={targetBrick.color} opacity={0.4} />
+          </group>
+        )}
+      </>
+    )
+  }
 
   return (
     <>

@@ -44,6 +44,14 @@ There's no manual bounding-box raycast math: every placed brick renders an invis
 
 Verified: `hasCollision`/`buildOccupancy` pure-logic checks (same-cell block, cross-layer and disjoint-cell pass, wider-footprint overlap detection) and stacking (ghost renders on top of a placed brick, one layer up) were confirmed via Playwright against the running dev server.
 
+## Modes, playback, and set data
+
+`useBuildStore.mode` is `'edit'` (free placement, phases 2–4) or `'playback'` (phase 6 instructions). `App.tsx` swaps the `Palette` panel for `PlaybackControls` based on it. Playback doesn't have its own data — it steps through the *same* `bricks` array in placement order (`step` indexes into it): steps before `step` render solid, `bricks[step]` renders as a ghost, `step === bricks.length` is the finished state. This means playback works on whatever's currently in the store, live-built or imported — there's no separate "instructions" format.
+
+`src/lib/io.ts` exports/imports that `bricks` array as JSON (`downloadBuild` / `parseBuild`), wired to Export/Import buttons in `Palette`. This is how phase 5's actual design work gets captured as durable content — since there's no backend (see Cut for v1), build the set in the browser, then **Export** and commit the resulting JSON somewhere durable (e.g. `src/data/set.json`, loaded at startup) once it's final. Import exists so that file can be reloaded for further editing.
+
+`CameraFramer.tsx` lerps the `OrbitControls` target toward the current playback step's brick center each frame; it's a no-op in edit mode so it never fights the builder's manual camera control.
+
 ## Grid units
 
 Defined in `src/lib/grid.ts` — import from there rather than hardcoding.

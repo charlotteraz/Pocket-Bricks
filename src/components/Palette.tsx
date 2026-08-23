@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import { BRICK_DEFS } from '../lib/bricks'
 import { COLORS } from '../lib/colors'
+import { downloadBuild, parseBuild } from '../lib/io'
 import { useBuildStore } from '../store/useBuildStore'
 
 export default function Palette() {
@@ -9,6 +11,10 @@ export default function Palette() {
   const setActiveType = useBuildStore((s) => s.setActiveType)
   const setActiveColor = useBuildStore((s) => s.setActiveColor)
   const rotateActive = useBuildStore((s) => s.rotateActive)
+  const bricks = useBuildStore((s) => s.bricks)
+  const loadBricks = useBuildStore((s) => s.loadBricks)
+  const enterPlayback = useBuildStore((s) => s.enterPlayback)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="absolute top-4 left-4 z-10 flex w-56 flex-col gap-4 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur">
@@ -60,6 +66,52 @@ export default function Palette() {
         >
           {activeRotation}° — press R to rotate
         </button>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-neutral-200 pt-3">
+        <button
+          type="button"
+          onClick={enterPlayback}
+          disabled={bricks.length === 0}
+          className="w-full rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+        >
+          Play instructions ({bricks.length} bricks)
+        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => downloadBuild(bricks)}
+            disabled={bricks.length === 0}
+            className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+          >
+            Export
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:border-neutral-500"
+          >
+            Import
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            try {
+              const text = await file.text()
+              loadBricks(parseBuild(text))
+            } catch (err) {
+              window.alert(`Couldn't load that file: ${err instanceof Error ? err.message : String(err)}`)
+            } finally {
+              e.target.value = ''
+            }
+          }}
+        />
       </div>
     </div>
   )
