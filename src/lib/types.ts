@@ -1,5 +1,10 @@
-// One fixed shape for now (phase 2); the palette in phase 3 adds more.
-export type BrickType = 'brick2x4'
+export type BrickType =
+  | 'brick1x1'
+  | 'brick1x2'
+  | 'brick1x4'
+  | 'brick2x2'
+  | 'brick2x3'
+  | 'brick2x4'
 
 export type Brick = {
   type: BrickType

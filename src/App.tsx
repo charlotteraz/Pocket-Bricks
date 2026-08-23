@@ -1,9 +1,11 @@
 import Scene from './components/Scene'
+import Palette from './components/Palette'
 
 function App() {
   return (
-    <div className="h-full w-full">
+    <div className="relative h-full w-full">
       <Scene />
+      <Palette />
     </div>
   )
 }

@@ -18,7 +18,7 @@ One ordered array is both "the set" and the instruction step order:
 See `src/lib/types.ts`:
 
 ```ts
-type BrickType = 'brick2x4' // more shapes added by phase 3's palette
+type BrickType = 'brick1x1' | 'brick1x2' | 'brick1x4' | 'brick2x2' | 'brick2x3' | 'brick2x4'
 
 type Brick = {
   type: BrickType
@@ -31,6 +31,10 @@ type Build = Brick[] // useBuildStore's `bricks` array
 ```
 
 `position` is a brick's footprint min-corner: x/z in studs, y at the base of its stack layer (multiples of `BRICK_HEIGHT`). Brick geometry (`src/components/bricks/Brick.tsx`) is built local-origin-at-corner to match.
+
+Shape defs (footprint in studs, per type) live in `src/lib/bricks.ts`. Rotation is **not** a mesh transform — since a box with a symmetric grid of round studs looks identical either way, `effectiveFootprint()` just swaps `studsX`/`studsZ` when `rotation` is 90 or 270. That function is the single place both the ghost and placed-brick rendering read footprint from, so it must stay in sync with anything that reasons about occupied cells (e.g. phase 4's collision check).
+
+Color swatches are a fixed 6-color set in `src/lib/colors.ts`.
 
 ## Grid units
 
