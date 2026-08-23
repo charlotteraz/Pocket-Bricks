@@ -8,6 +8,24 @@ export const BRICK_HEIGHT = PLATE_HEIGHT * 3
 // Baseplate footprint, in studs.
 export const GRID_SIZE = 32
 
-export function snapToGrid(x: number, z: number): [number, number] {
-  return [Math.round(x / STUD) * STUD, Math.round(z / STUD) * STUD]
+// Snaps a raycast hit point to the stud cell containing it, returned as
+// integer cell coordinates (the cell's min corner) — a brick's `position`
+// anchors on this corner and extends toward +X/+Z by its footprint.
+export function cellFromPoint(x: number, z: number): [number, number] {
+  return [Math.floor(x / STUD), Math.floor(z / STUD)]
+}
+
+// Clamps a footprint anchor so a `footprintX`x`footprintZ` brick stays
+// within the baseplate.
+export function clampToBaseplate(
+  cellX: number,
+  cellZ: number,
+  footprintX: number,
+  footprintZ: number,
+): [number, number] {
+  const half = GRID_SIZE / 2
+  return [
+    Math.min(Math.max(cellX, -half), half - footprintX),
+    Math.min(Math.max(cellZ, -half), half - footprintZ),
+  ]
 }

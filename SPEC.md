@@ -15,16 +15,22 @@ Browser-based LEGO builder: one fixed set (~30–80 pieces), 5–6 brick shapes,
 
 One ordered array is both "the set" and the instruction step order:
 
+See `src/lib/types.ts`:
+
 ```ts
+type BrickType = 'brick2x4' // more shapes added by phase 3's palette
+
 type Brick = {
-  type: string // one of 5-6 fixed shapes
-  position: [number, number, number] // grid units, see below
+  type: BrickType
+  position: [number, number, number] // world units, see below
   rotation: 0 | 90 | 180 | 270 // degrees about Y
   color: string
 }
 
-type Build = Brick[]
+type Build = Brick[] // useBuildStore's `bricks` array
 ```
+
+`position` is a brick's footprint min-corner: x/z in studs, y at the base of its stack layer (multiples of `BRICK_HEIGHT`). Brick geometry (`src/components/bricks/Brick.tsx`) is built local-origin-at-corner to match.
 
 ## Grid units
 
