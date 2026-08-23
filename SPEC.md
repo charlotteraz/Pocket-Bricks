@@ -32,9 +32,17 @@ type Build = Brick[] // useBuildStore's `bricks` array
 
 `position` is a brick's footprint min-corner: x/z in studs, y at the base of its stack layer (multiples of `BRICK_HEIGHT`). Brick geometry (`src/components/bricks/Brick.tsx`) is built local-origin-at-corner to match.
 
-Shape defs (footprint in studs, per type) live in `src/lib/bricks.ts`. Rotation is **not** a mesh transform — since a box with a symmetric grid of round studs looks identical either way, `effectiveFootprint()` just swaps `studsX`/`studsZ` when `rotation` is 90 or 270. That function is the single place both the ghost and placed-brick rendering read footprint from, so it must stay in sync with anything that reasons about occupied cells (e.g. phase 4's collision check).
+Shape defs (footprint in studs, per type) live in `src/lib/bricks.ts`. Rotation is **not** a mesh transform — since a box with a symmetric grid of round studs looks identical either way, `effectiveFootprint()` just swaps `studsX`/`studsZ` when `rotation` is 90 or 270. That function is the single place both the ghost and placed-brick rendering read footprint from, so it must stay in sync with anything that reasons about occupied cells (occupancy, below).
 
 Color swatches are a fixed 6-color set in `src/lib/colors.ts`.
+
+## Stacking & occupancy
+
+`src/lib/occupancy.ts` tracks which `(x, layer, z)` unit cells are claimed — one Zustand-derived `Set<string>` built fresh from `bricks` each render (`useMemo` in `BuildScene`), not stored separately. `layer` is `y / BRICK_HEIGHT` rounded to an integer stack level. `hasCollision()` is the single gate `BuildScene`'s `tryPlace()` checks before calling `addBrick` — nothing else should call `addBrick` directly.
+
+There's no manual bounding-box raycast math: every placed brick renders an invisible full-volume collider alongside its visible mesh (`src/components/BuildScene.tsx`), so three.js's own nearest-hit raycasting resolves "what's under the cursor" — the ground plane, or whichever brick is topmost/frontmost at that pixel. Hitting a brick's collider (any face) always means "stack on the layer above that brick," never "land inside it" — you can't click through a brick to its own occupied cell, so occupancy collisions only arise when a *wider* footprint, anchored at an open cell, overlaps a neighboring occupied cell at the same layer.
+
+Verified: `hasCollision`/`buildOccupancy` pure-logic checks (same-cell block, cross-layer and disjoint-cell pass, wider-footprint overlap detection) and stacking (ghost renders on top of a placed brick, one layer up) were confirmed via Playwright against the running dev server.
 
 ## Grid units
 
