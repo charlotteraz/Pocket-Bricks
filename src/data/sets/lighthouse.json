@@ -6,7 +6,11 @@
 
   { "type": "brick2x4", "position": [-2, 1.2, -2], "rotation": 0, "color": "#e8e8e8" },
   { "type": "brick2x4", "position": [0, 1.2, -2], "rotation": 0, "color": "#e8e8e8" },
-  { "type": "brick2x4", "position": [-2, 2.4, -2], "rotation": 0, "color": "#e8e8e8" },
+
+  { "type": "brick2x2", "position": [-2, 2.4, -2], "rotation": 0, "color": "#e8e8e8" },
+  { "type": "brick1x1", "position": [-2, 2.4, 0], "rotation": 0, "color": "#1e5fb4" },
+  { "type": "brick1x1", "position": [-1, 2.4, 0], "rotation": 0, "color": "#e8e8e8" },
+  { "type": "brick1x2", "position": [-2, 2.4, 1], "rotation": 90, "color": "#e8e8e8" },
   { "type": "brick2x4", "position": [0, 2.4, -2], "rotation": 0, "color": "#e8e8e8" },
 
   { "type": "brick2x4", "position": [-2, 3.6, -2], "rotation": 0, "color": "#d33f3f" },
@@ -14,8 +18,12 @@
   { "type": "brick2x4", "position": [-2, 4.8, -2], "rotation": 0, "color": "#d33f3f" },
   { "type": "brick2x4", "position": [0, 4.8, -2], "rotation": 0, "color": "#d33f3f" },
 
-  { "type": "brick2x4", "position": [-2, 6.0, -2], "rotation": 0, "color": "#e8e8e8" },
+  { "type": "brick2x2", "position": [-2, 6.0, -2], "rotation": 0, "color": "#e8e8e8" },
+  { "type": "brick1x1", "position": [-2, 6.0, 0], "rotation": 0, "color": "#1e5fb4" },
+  { "type": "brick1x1", "position": [-1, 6.0, 0], "rotation": 0, "color": "#e8e8e8" },
+  { "type": "brick1x2", "position": [-2, 6.0, 1], "rotation": 90, "color": "#e8e8e8" },
   { "type": "brick2x4", "position": [0, 6.0, -2], "rotation": 0, "color": "#e8e8e8" },
+
   { "type": "brick2x4", "position": [-2, 7.2, -2], "rotation": 0, "color": "#e8e8e8" },
   { "type": "brick2x4", "position": [0, 7.2, -2], "rotation": 0, "color": "#e8e8e8" },
 
@@ -30,13 +38,14 @@
   { "type": "brick2x4", "position": [-2, 12.0, -2], "rotation": 0, "color": "#1e5fb4" },
   { "type": "brick2x4", "position": [0, 12.0, -2], "rotation": 0, "color": "#1e5fb4" },
 
-  { "type": "brick2x2", "position": [-2, 13.2, -2], "rotation": 0, "color": "#d33f3f" },
-  { "type": "brick2x2", "position": [0, 13.2, -2], "rotation": 0, "color": "#d33f3f" },
-  { "type": "brick2x2", "position": [-2, 13.2, 0], "rotation": 0, "color": "#d33f3f" },
-  { "type": "brick2x2", "position": [0, 13.2, 0], "rotation": 0, "color": "#d33f3f" },
+  { "type": "slope2x2", "position": [-2, 13.2, -2], "rotation": 0, "color": "#d33f3f" },
+  { "type": "slope2x2", "position": [0, 13.2, -2], "rotation": 0, "color": "#d33f3f" },
+  { "type": "slope2x2", "position": [-2, 13.2, 0], "rotation": 180, "color": "#d33f3f" },
+  { "type": "slope2x2", "position": [0, 13.2, 0], "rotation": 180, "color": "#d33f3f" },
 
   { "type": "brick2x2", "position": [-1, 14.4, -1], "rotation": 0, "color": "#f2b705" },
   { "type": "brick1x1", "position": [0, 15.6, 0], "rotation": 0, "color": "#f2b705" },
+  { "type": "brick1x1", "position": [0, 16.8, 0], "rotation": 0, "color": "#2b2b2b" },
 
   { "type": "brick1x2", "position": [3, 0, -2], "rotation": 90, "color": "#e8e8e8" },
   { "type": "brick1x1", "position": [6, 0, -2], "rotation": 0, "color": "#e8e8e8" },
@@ -53,5 +62,12 @@
   { "type": "brick2x4", "position": [3, 2.4, -2], "rotation": 90, "color": "#d33f3f" },
   { "type": "brick1x4", "position": [3, 2.4, 0], "rotation": 90, "color": "#d33f3f" },
 
-  { "type": "brick2x2", "position": [4, 3.6, -1], "rotation": 0, "color": "#d33f3f" }
+  { "type": "brick2x2", "position": [4, 3.6, -1], "rotation": 0, "color": "#d33f3f" },
+
+  { "type": "brick1x1", "position": [6, 3.6, -2], "rotation": 0, "color": "#2b2b2b" },
+  { "type": "brick1x1", "position": [6, 4.8, -2], "rotation": 0, "color": "#2b2b2b" },
+  { "type": "brick1x1", "position": [6, 6.0, -2], "rotation": 0, "color": "#2b2b2b" },
+
+  { "type": "brick1x1", "position": [5, 0, -3], "rotation": 0, "color": "#2b2b2b" },
+  { "type": "brick1x1", "position": [5, 1.2, -3], "rotation": 0, "color": "#f2b705" }
 ]

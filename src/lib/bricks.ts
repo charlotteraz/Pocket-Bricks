@@ -45,7 +45,9 @@ export const SHAPES: ShapeDef[] = [
   { type: 'brick2x3', studsX: 2, studsZ: 3, heightInPlates: 3, hasStuds: true, label: '2x3', buildGeometry: buildBoxGeometry },
   { type: 'brick2x4', studsX: 2, studsZ: 4, heightInPlates: 3, hasStuds: true, label: '2x4', buildGeometry: buildBoxGeometry },
   { type: 'slope2x2', studsX: 2, studsZ: 2, heightInPlates: 3, hasStuds: false, label: 'Slope 2x2', buildGeometry: buildSlopeGeometry },
+  { type: 'slope3x2', studsX: 3, studsZ: 2, heightInPlates: 3, hasStuds: false, label: 'Slope 3x2', buildGeometry: buildSlopeGeometry },
   { type: 'wedge2x3', studsX: 2, studsZ: 3, heightInPlates: 3, hasStuds: false, label: 'Wedge 2x3', buildGeometry: buildWedgeGeometry },
+  { type: 'wedge2x2', studsX: 2, studsZ: 2, heightInPlates: 3, hasStuds: false, label: 'Wedge 2x2', buildGeometry: buildWedgeGeometry },
 ]
 
 export function shapeDef(type: ShapeId): ShapeDef {

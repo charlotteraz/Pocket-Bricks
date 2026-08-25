@@ -6,7 +6,9 @@ export type ShapeId =
   | 'brick2x3'
   | 'brick2x4'
   | 'slope2x2'
+  | 'slope3x2'
   | 'wedge2x3'
+  | 'wedge2x2'
 
 export type Brick = {
   type: ShapeId
