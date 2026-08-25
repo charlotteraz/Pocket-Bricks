@@ -45,7 +45,7 @@ export default function PlacedBrick({
 
   return (
     <group ref={groupRef} position={brick.position}>
-      <Brick studsX={footprintX} studsZ={footprintZ} color={brick.color} />
+      <Brick type={brick.type} rotation={brick.rotation} color={brick.color} />
       {interactive && (
         <mesh
           position={[(footprintX * STUD) / 2, BRICK_HEIGHT / 2, (footprintZ * STUD) / 2]}

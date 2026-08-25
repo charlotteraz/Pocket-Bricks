@@ -8,7 +8,7 @@ Browser-based LEGO builder: one fixed set (~30–80 pieces), 5–6 brick shapes,
 - three.js + @react-three/fiber + @react-three/drei (Canvas, OrbitControls)
 - Zustand (app state)
 - Tailwind CSS v4 (via `@tailwindcss/vite`)
-- Hand-built brick geometry (box/cylinder primitives) — no imported assets
+- Hand-built shape geometry (box/cylinder primitives plus custom `BufferGeometry` for angled shapes) — no imported assets
 - Hosting: Vercel
 
 ## Data model
@@ -18,10 +18,11 @@ One ordered array is both "the set" and the instruction step order:
 See `src/lib/types.ts`:
 
 ```ts
-type BrickType = 'brick1x1' | 'brick1x2' | 'brick1x4' | 'brick2x2' | 'brick2x3' | 'brick2x4'
+type ShapeId = 'brick1x1' | 'brick1x2' | 'brick1x4' | 'brick2x2' | 'brick2x3' | 'brick2x4'
+  | 'slope2x2' | 'wedge2x3'
 
 type Brick = {
-  type: BrickType
+  type: ShapeId
   position: [number, number, number] // world units, see below
   rotation: 0 | 90 | 180 | 270 // degrees about Y
   color: string
@@ -30,9 +31,33 @@ type Brick = {
 type Build = Brick[] // useBuildStore's `bricks` array
 ```
 
-`position` is a brick's footprint min-corner: x/z in studs, y at the base of its stack layer (multiples of `BRICK_HEIGHT`). Brick geometry (`src/components/bricks/Brick.tsx`) is built local-origin-at-corner to match.
+`position` is a piece's footprint min-corner: x/z in studs, y at the base of its stack layer (multiples of `BRICK_HEIGHT`). Shape geometry (`src/components/bricks/Brick.tsx`) is built local-origin-at-corner to match.
 
-Shape defs (footprint in studs, per type) live in `src/lib/bricks.ts`. Rotation is **not** a mesh transform — since a box with a symmetric grid of round studs looks identical either way, `effectiveFootprint()` just swaps `studsX`/`studsZ` when `rotation` is 90 or 270. That function is the single place both the ghost and placed-brick rendering read footprint from, so it must stay in sync with anything that reasons about occupied cells (occupancy, below).
+## Shape registry
+
+`src/lib/bricks.ts` is a shape registry, not a hardcoded list of boxes: `SHAPES: ShapeDef[]` is a config array, one entry per shape --
+
+```ts
+type ShapeDef = {
+  type: ShapeId
+  studsX: number
+  studsZ: number
+  heightInPlates: number // 3 = a full brick's height; plates (later) will be 1
+  hasStuds: boolean
+  label: string
+  buildGeometry: (studsX: number, studsZ: number, heightInPlates: number) => THREE.BufferGeometry
+}
+```
+
+`buildGeometry()` always returns body geometry authored min-corner-anchored in the shape's *canonical* (rotation 0) orientation, spanning `[0, studsX*STUD] x [0, height] x [0, studsZ*STUD]`. For the six original brick shapes this is a translated `THREE.BoxGeometry`; adding a new box-shaped size is a one-line entry in `SHAPES`, nothing else.
+
+**Slopes and wedges** (`src/lib/shapes/slope.ts`, `wedge.ts`) needed real custom geometry: a slope's height ramps linearly from 0 at the front edge to full height at the back (a roof-style angled top, no studs), and a wedge keeps full height but tapers in *plan view* from full width at the back to a point at the front (a triangular-prism footprint, still occupying its full rectangular bounding box for placement — same simplification real wedge plates use, and why occupancy didn't need to change for this pass). Both are built with `src/lib/shapes/geometryUtils.ts`'s `buildFacetedGeometry()`: you list each face as a simple ordered boundary walk (no need to get 3D winding order right by hand), and it auto-orients every face outward by checking whether its raw normal points toward the solid's centroid, flipping if so, before flat-shading and fan-triangulating. This was worth building once — hand-deriving correct CCW winding for a 6-faced custom solid by cross-product sign-checking is exactly the kind of thing that's easy to get subtly wrong with no live rendering feedback loop (Playwright screenshots are the only feedback here), and the auto-orientation approach turns that into "just describe the shape."
+
+**Rotation is a real transform**, not the footprint-dimension-swap trick the original 6 box shapes used to get away with (a box with a symmetric stud grid looks identical whether you rotate the mesh or just rebuild it with swapped width/depth — that trick silently breaks for anything asymmetric, like a slope's angled face or a wedge's point). `Brick.tsx`'s `rotationTransform()` rotates the canonical geometry around the local Y axis by the piece's `rotation`, then translates it so the *rotated* footprint's own min corner still lands back at local `(0,0,0)` — derived by rotating the four canonical footprint corners through three.js's standard Y-rotation matrix and re-deriving the new bounding min per rotation (worked example in that file's comment). This is why a 4-slope test (one at each rotation) forms a clean staircase with the ramp pointing a different way each time, verified via Playwright screenshot.
+
+`effectiveFootprint()` in `bricks.ts` is unrelated to that visual transform — it only answers "which cells does the rotated footprint occupy," by swapping `studsX`/`studsZ` at 90°/270° (still correct for every shape, since rotating a rectangle's *bounding box* by 90° always swaps its extents regardless of what's drawn inside it). That function is the single place both the ghost and placed-piece code read footprint from for occupancy, so it must stay in sync with anything that reasons about occupied cells (occupancy, below) — verified unaffected by this pass via the existing `hasCollision`/`buildOccupancy` checks plus new cases for the two new shapes' footprint-swap and cross-shape collision.
+
+Deferred to a later pass (per the roadmap this followed): cylinders/cones/arches, which have round or irregular footprints and need occupancy generalized from "one grid cell" to "each shape declares its own occupied cells"; and plates/tiles, which need `heightInPlates` to actually vary (right now every shape, including the slope/wedge, is `heightInPlates: 3`, so `occupancy.ts`'s one-layer-per-piece assumption is still exactly true).
 
 Color swatches are a fixed 6-color set in `src/lib/colors.ts`.
 

@@ -60,14 +60,11 @@ function ReferenceScene({ bricks, center, distance, interactive, autoRotateSpeed
       <ambientLight intensity={0.8} />
       <directionalLight position={[5, 8, 4]} intensity={1} />
       <directionalLight position={[-4, 3, -3]} intensity={0.3} />
-      {bricks.map((brick, i) => {
-        const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)
-        return (
-          <group key={i} position={brick.position}>
-            <Brick studsX={fx} studsZ={fz} color={brick.color} />
-          </group>
-        )
-      })}
+      {bricks.map((brick, i) => (
+        <group key={i} position={brick.position}>
+          <Brick type={brick.type} rotation={brick.rotation} color={brick.color} />
+        </group>
+      ))}
       <OrbitControls
         target={center}
         enableZoom={interactive}

@@ -84,7 +84,6 @@ export default function BuildScene() {
 
   if (mode === 'playback') {
     const targetBrick = bricks[step]
-    const [tfx, tfz] = targetBrick ? effectiveFootprint(targetBrick.type, targetBrick.rotation) : [0, 0]
     return (
       <>
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -100,7 +99,12 @@ export default function BuildScene() {
 
         {targetBrick && (
           <group position={targetBrick.position}>
-            <Brick studsX={tfx} studsZ={tfz} color={targetBrick.color} opacity={0.4} />
+            <Brick
+              type={targetBrick.type}
+              rotation={targetBrick.rotation}
+              color={targetBrick.color}
+              opacity={0.4}
+            />
           </group>
         )}
       </>
@@ -172,8 +176,8 @@ export default function BuildScene() {
       {anchor && (
         <group position={[anchor[0] * STUD, yFromLayer(hovered!.layer), anchor[1] * STUD]}>
           <Brick
-            studsX={activeFootprintX}
-            studsZ={activeFootprintZ}
+            type={activeType}
+            rotation={activeRotation}
             color={blocked ? '#ff3b3b' : activeColor}
             opacity={blocked ? 0.3 : 0.45}
           />

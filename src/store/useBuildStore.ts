@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Brick, BrickType } from '../lib/types'
+import type { Brick, ShapeId } from '../lib/types'
 import { COLORS } from '../lib/colors'
 import { SETS } from '../data/sets'
 
@@ -25,10 +25,10 @@ type BuildStore = {
   activeSetId: string | undefined
   loadSet: (id: string) => void
 
-  activeType: BrickType
+  activeType: ShapeId
   activeColor: string
   activeRotation: Rotation
-  setActiveType: (type: BrickType) => void
+  setActiveType: (type: ShapeId) => void
   setActiveColor: (color: string) => void
   rotateActive: () => void
 

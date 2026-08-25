@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { BRICK_DEFS } from '../lib/bricks'
+import { SHAPES } from '../lib/bricks'
 import { COLORS } from '../lib/colors'
 import { downloadBuild, parseBuild } from '../lib/io'
 import { SETS } from '../data/sets'
@@ -48,7 +48,7 @@ export default function Palette() {
       <div>
         <h2 className="mb-2 text-sm font-semibold text-neutral-700">Bricks</h2>
         <div className="grid grid-cols-3 gap-2">
-          {BRICK_DEFS.map((def) => (
+          {SHAPES.map((def) => (
             <button
               key={def.type}
               type="button"
