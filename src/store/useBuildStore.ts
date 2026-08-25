@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Brick, BrickType } from '../lib/types'
 import { COLORS } from '../lib/colors'
-import defaultSet from '../data/set.json'
+import { SETS } from '../data/sets'
 
 type Rotation = 0 | 90 | 180 | 270
 type Mode = 'edit' | 'playback'
@@ -10,6 +10,12 @@ type BuildStore = {
   bricks: Brick[]
   addBrick: (brick: Brick) => void
   loadBricks: (bricks: Brick[]) => void
+
+  // Which of the fixed sets (src/data/sets.ts) is currently loaded, if any --
+  // undefined once a brick's been placed/removed by hand or a custom file
+  // imported, since the bricks no longer necessarily match that set.
+  activeSetId: string | undefined
+  loadSet: (id: string) => void
 
   activeType: BrickType
   activeColor: string
@@ -33,9 +39,17 @@ type BuildStore = {
 const ROTATIONS: Rotation[] = [0, 90, 180, 270]
 
 export const useBuildStore = create<BuildStore>((set) => ({
-  bricks: defaultSet as Brick[],
-  addBrick: (brick) => set((state) => ({ bricks: [...state.bricks, brick] })),
-  loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0 }),
+  bricks: SETS[0].bricks,
+  addBrick: (brick) =>
+    set((state) => ({ bricks: [...state.bricks, brick], activeSetId: undefined })),
+  loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0, activeSetId: undefined }),
+
+  activeSetId: SETS[0].id,
+  loadSet: (id) => {
+    const found = SETS.find((s) => s.id === id)
+    if (!found) return
+    set({ bricks: found.bricks, activeSetId: id, mode: 'edit', step: 0 })
+  },
 
   activeType: 'brick2x4',
   activeColor: COLORS[0].hex,

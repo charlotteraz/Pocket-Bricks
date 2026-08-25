@@ -58,13 +58,15 @@ Verified: `hasCollision`/`buildOccupancy` pure-logic checks (same-cell block, cr
 - **Snap + bounce**: `src/lib/sound.ts` synthesizes a short click via the Web Audio API (no audio asset). `PlacedBrick.tsx` plays a one-shot scale-bounce whenever it *mounts* — which happens for a genuinely new brick appended in edit mode, or a newly-revealed solid brick when stepping forward in playback (both use stable `key={i}`, so already-existing indices never remount). Sound is triggered explicitly at the two placement call sites (`BuildScene.tryPlace`, `PlaybackControls`' Next) rather than tied to mount, so a bulk `loadBricks` import doesn't fire a stampede of sounds — the bounce animation is harmless in bulk, but N simultaneous clicks would not be.
 - **Start/finish**: `started: boolean` in the store gates a `StartScreen` overlay shown until dismissed (`App.tsx`). The playback "Build complete" state (added in phase 6) got a green highlight and checkmark as the finish-state polish.
 
-## The fixed set
+## The fixed sets
 
-`src/data/set.json` is the one fixed set (phase 5) — a striped lighthouse with an attached keeper's cottage, 43 bricks using all 6 shapes and 5 of the 6 colors. It's built entirely from box bricks (no slopes/curves in the catalog), so the design leans on color banding rather than sloped geometry: alternating white/red courses up the tower shaft, a black gallery band, a blue "glass" lantern room, and a yellow beacon on top; the cottage gets two blue window bricks and a gap left in the wall for a doorway. `useBuildStore`'s initial `bricks` state loads this file directly, so the app opens with the finished set already in place, ready to inspect or step through via **Play instructions**.
+`src/data/sets/*.json` hold three fixed sets (phase 5, later widened from the plan's original "one fixed set" scope to let users pick between builds): a striped **lighthouse** with an attached keeper's cottage (43 bricks), a blocky **car** (19 bricks), and a **flower** in a pot (19 bricks). All three use only the 6 box-brick shapes — no slopes or curves in the catalog — so recognizability leans on color: the lighthouse uses banding (white/red courses, a black gallery, a blue "glass" lantern, a yellow beacon), the car uses black corner bricks as wheel stubs plus a blue windshield and yellow headlights, and the flower is a green stem/leaf column topped with a 3x3 plus-shaped head of red and yellow petal bricks.
 
-The layout was authored as data (hand-placed stud coordinates, tower footprint x:[-2,2) z:[-2,2), cottage footprint x:[3,7) z:[-2,1) with a 1-stud gap between them) rather than by clicking through the UI, then verified against the app's real `effectiveFootprint`/occupancy math (via a headless import of `src/lib/bricks.ts` and `src/lib/grid.ts`) to confirm zero collisions and zero out-of-baseplate placements before being adopted as `set.json`. Placement order in the array is the instruction order: tower bottom-to-top, then cottage.
+`src/data/sets.ts` exports `SETS: {id, name, bricks}[]`, the registry both the store and the UI read from. Each layout was authored as data (hand-placed stud coordinates) rather than by clicking through the UI, then verified against the app's real `effectiveFootprint`/occupancy math (via a headless import of `src/lib/bricks.ts` and `src/lib/grid.ts`) to confirm zero collisions and zero out-of-baseplate placements before being adopted into `sets/`. Placement order in each array is that set's instruction order.
 
-`resolveJsonModule` is on in `tsconfig.app.json` so this import type-checks.
+`useBuildStore` tracks `activeSetId` alongside `bricks`; `loadSet(id)` swaps in a set's bricks and mode/step reset, while manually placing/removing a brick or importing a custom file clears `activeSetId` (the bricks no longer necessarily match a registered set). `Palette` renders a "Set" picker above the brick palette from `SETS`, highlighting whichever id is active. The app boots on `SETS[0]` (the lighthouse).
+
+`resolveJsonModule` is on in `tsconfig.app.json` so these JSON imports type-check.
 
 ## Grid units
 
@@ -80,4 +82,4 @@ These ratios match real LEGO proportions (8mm stud pitch : 3.2mm plate height = 
 
 ## Cut for v1
 
-Full brick catalog, physics-accurate collision, auto-generated instructions, multiple sets, touch/mobile input, save/load accounts. See build plan for details.
+Full brick catalog, physics-accurate collision, auto-generated instructions, touch/mobile input, save/load accounts. See build plan for details. (Multiple sets, originally cut here, was added later — see "The fixed sets" above.)

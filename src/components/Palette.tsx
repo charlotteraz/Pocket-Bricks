@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { BRICK_DEFS } from '../lib/bricks'
 import { COLORS } from '../lib/colors'
 import { downloadBuild, parseBuild } from '../lib/io'
+import { SETS } from '../data/sets'
 import { useBuildStore } from '../store/useBuildStore'
 
 export default function Palette() {
@@ -13,11 +14,33 @@ export default function Palette() {
   const rotateActive = useBuildStore((s) => s.rotateActive)
   const bricks = useBuildStore((s) => s.bricks)
   const loadBricks = useBuildStore((s) => s.loadBricks)
+  const activeSetId = useBuildStore((s) => s.activeSetId)
+  const loadSet = useBuildStore((s) => s.loadSet)
   const enterPlayback = useBuildStore((s) => s.enterPlayback)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="absolute top-4 left-4 z-10 flex w-56 flex-col gap-4 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur">
+      <div>
+        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Set</h2>
+        <div className="flex flex-col gap-2">
+          {SETS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => loadSet(s.id)}
+              className={`rounded border px-2 py-2 text-left text-xs font-medium transition-colors ${
+                activeSetId === s.id
+                  ? 'border-neutral-800 bg-neutral-800 text-white'
+                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500'
+              }`}
+            >
+              {s.name} <span className="opacity-60">({s.bricks.length})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div>
         <h2 className="mb-2 text-sm font-semibold text-neutral-700">Bricks</h2>
         <div className="grid grid-cols-3 gap-2">
