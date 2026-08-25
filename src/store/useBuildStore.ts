@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Brick, BrickType } from '../lib/types'
 import { COLORS } from '../lib/colors'
+import defaultSet from '../data/set.json'
 
 type Rotation = 0 | 90 | 180 | 270
 type Mode = 'edit' | 'playback'
@@ -32,7 +33,7 @@ type BuildStore = {
 const ROTATIONS: Rotation[] = [0, 90, 180, 270]
 
 export const useBuildStore = create<BuildStore>((set) => ({
-  bricks: [],
+  bricks: defaultSet as Brick[],
   addBrick: (brick) => set((state) => ({ bricks: [...state.bricks, brick] })),
   loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0 }),
 

@@ -58,6 +58,14 @@ Verified: `hasCollision`/`buildOccupancy` pure-logic checks (same-cell block, cr
 - **Snap + bounce**: `src/lib/sound.ts` synthesizes a short click via the Web Audio API (no audio asset). `PlacedBrick.tsx` plays a one-shot scale-bounce whenever it *mounts* — which happens for a genuinely new brick appended in edit mode, or a newly-revealed solid brick when stepping forward in playback (both use stable `key={i}`, so already-existing indices never remount). Sound is triggered explicitly at the two placement call sites (`BuildScene.tryPlace`, `PlaybackControls`' Next) rather than tied to mount, so a bulk `loadBricks` import doesn't fire a stampede of sounds — the bounce animation is harmless in bulk, but N simultaneous clicks would not be.
 - **Start/finish**: `started: boolean` in the store gates a `StartScreen` overlay shown until dismissed (`App.tsx`). The playback "Build complete" state (added in phase 6) got a green highlight and checkmark as the finish-state polish.
 
+## The fixed set
+
+`src/data/set.json` is the one fixed set (phase 5) — a striped lighthouse with an attached keeper's cottage, 43 bricks using all 6 shapes and 5 of the 6 colors. It's built entirely from box bricks (no slopes/curves in the catalog), so the design leans on color banding rather than sloped geometry: alternating white/red courses up the tower shaft, a black gallery band, a blue "glass" lantern room, and a yellow beacon on top; the cottage gets two blue window bricks and a gap left in the wall for a doorway. `useBuildStore`'s initial `bricks` state loads this file directly, so the app opens with the finished set already in place, ready to inspect or step through via **Play instructions**.
+
+The layout was authored as data (hand-placed stud coordinates, tower footprint x:[-2,2) z:[-2,2), cottage footprint x:[3,7) z:[-2,1) with a 1-stud gap between them) rather than by clicking through the UI, then verified against the app's real `effectiveFootprint`/occupancy math (via a headless import of `src/lib/bricks.ts` and `src/lib/grid.ts`) to confirm zero collisions and zero out-of-baseplate placements before being adopted as `set.json`. Placement order in the array is the instruction order: tower bottom-to-top, then cottage.
+
+`resolveJsonModule` is on in `tsconfig.app.json` so this import type-checks.
+
 ## Grid units
 
 Defined in `src/lib/grid.ts` — import from there rather than hardcoding.
