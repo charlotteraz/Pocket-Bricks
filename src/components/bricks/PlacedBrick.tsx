@@ -10,6 +10,7 @@ type Props = {
   footprintX: number
   footprintZ: number
   interactive?: boolean
+  onColliderPointerDown?: (e: ThreeEvent<PointerEvent>) => void
   onColliderPointerMove?: (e: ThreeEvent<PointerEvent>) => void
   onColliderPointerOut?: () => void
   onColliderClick?: (e: ThreeEvent<MouseEvent>) => void
@@ -26,6 +27,7 @@ export default function PlacedBrick({
   footprintX,
   footprintZ,
   interactive = false,
+  onColliderPointerDown,
   onColliderPointerMove,
   onColliderPointerOut,
   onColliderClick,
@@ -47,6 +49,7 @@ export default function PlacedBrick({
       {interactive && (
         <mesh
           position={[(footprintX * STUD) / 2, BRICK_HEIGHT / 2, (footprintZ * STUD) / 2]}
+          onPointerDown={onColliderPointerDown}
           onPointerMove={onColliderPointerMove}
           onPointerOut={onColliderPointerOut}
           onClick={onColliderClick}

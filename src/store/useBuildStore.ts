@@ -11,6 +11,14 @@ type BuildStore = {
   addBrick: (brick: Brick) => void
   loadBricks: (bricks: Brick[]) => void
 
+  // Undo/redo over `bricks` as a whole -- each entry is a prior snapshot of
+  // the array (placement, import, or set switch all push one), not a diff,
+  // since builds are small enough that whole-array snapshots are cheap.
+  undoStack: Brick[][]
+  redoStack: Brick[][]
+  undo: () => void
+  redo: () => void
+
   // Which of the fixed sets (src/data/sets.ts) is the current reference --
   // shown in SetPreview, but deliberately not loaded onto the plate: the
   // point is to look at it and build it yourself by hand.
@@ -40,8 +48,43 @@ const ROTATIONS: Rotation[] = [0, 90, 180, 270]
 
 export const useBuildStore = create<BuildStore>((set) => ({
   bricks: [],
-  addBrick: (brick) => set((state) => ({ bricks: [...state.bricks, brick] })),
-  loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0 }),
+  addBrick: (brick) =>
+    set((state) => ({
+      bricks: [...state.bricks, brick],
+      undoStack: [...state.undoStack, state.bricks],
+      redoStack: [],
+    })),
+  loadBricks: (bricks) =>
+    set((state) => ({
+      bricks,
+      undoStack: [...state.undoStack, state.bricks],
+      redoStack: [],
+      mode: 'edit',
+      step: 0,
+    })),
+
+  undoStack: [],
+  redoStack: [],
+  undo: () =>
+    set((state) => {
+      if (state.undoStack.length === 0) return state
+      const prev = state.undoStack[state.undoStack.length - 1]
+      return {
+        bricks: prev,
+        undoStack: state.undoStack.slice(0, -1),
+        redoStack: [...state.redoStack, state.bricks],
+      }
+    }),
+  redo: () =>
+    set((state) => {
+      if (state.redoStack.length === 0) return state
+      const next = state.redoStack[state.redoStack.length - 1]
+      return {
+        bricks: next,
+        redoStack: state.redoStack.slice(0, -1),
+        undoStack: [...state.undoStack, state.bricks],
+      }
+    }),
 
   activeSetId: SETS[0].id,
   loadSet: (id) => {
@@ -50,7 +93,14 @@ export const useBuildStore = create<BuildStore>((set) => ({
     // Clears the plate rather than pre-building the set -- picking a set
     // swaps the reference preview and gives you a fresh plate to build it
     // on, it doesn't hand you the finished thing.
-    set({ bricks: [], activeSetId: id, mode: 'edit', step: 0 })
+    set((state) => ({
+      bricks: [],
+      undoStack: [...state.undoStack, state.bricks],
+      redoStack: [],
+      activeSetId: id,
+      mode: 'edit',
+      step: 0,
+    }))
   },
 
   activeType: 'brick2x4',

@@ -14,6 +14,10 @@ export default function Palette() {
   const rotateActive = useBuildStore((s) => s.rotateActive)
   const bricks = useBuildStore((s) => s.bricks)
   const loadBricks = useBuildStore((s) => s.loadBricks)
+  const canUndo = useBuildStore((s) => s.undoStack.length > 0)
+  const canRedo = useBuildStore((s) => s.redoStack.length > 0)
+  const undo = useBuildStore((s) => s.undo)
+  const redo = useBuildStore((s) => s.redo)
   const activeSetId = useBuildStore((s) => s.activeSetId)
   const loadSet = useBuildStore((s) => s.loadSet)
   const enterPlayback = useBuildStore((s) => s.enterPlayback)
@@ -88,6 +92,27 @@ export default function Palette() {
           className="w-full rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:border-neutral-500"
         >
           {activeRotation}° — press R to rotate
+        </button>
+      </div>
+
+      <div className="flex gap-2 border-t border-neutral-200 pt-3">
+        <button
+          type="button"
+          onClick={undo}
+          disabled={!canUndo}
+          title="Undo (Ctrl/Cmd+Z)"
+          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          onClick={redo}
+          disabled={!canRedo}
+          title="Redo (Ctrl/Cmd+Shift+Z)"
+          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+        >
+          Redo
         </button>
       </div>
 

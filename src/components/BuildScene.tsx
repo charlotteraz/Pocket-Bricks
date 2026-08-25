@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import { GRID_SIZE, STUD, cellFromPoint, clampToBaseplate } from '../lib/grid'
 import { effectiveFootprint } from '../lib/bricks'
@@ -10,25 +10,54 @@ import PlacedBrick from './bricks/PlacedBrick'
 
 type HoverCell = { cellX: number; cellZ: number; layer: number }
 
+// A click that moved more than this many screen pixels between down and up
+// is an orbit/pan drag, not a placement -- OrbitControls and our own
+// pointer handlers see the same raw events, so without this a camera drag
+// that starts and ends over the plate silently drops a brick.
+const DRAG_THRESHOLD_PX = 6
+
 export default function BuildScene() {
   const [hovered, setHovered] = useState<HoverCell | null>(null)
+  const pointerDownAt = useRef<[number, number] | null>(null)
   const mode = useBuildStore((s) => s.mode)
   const step = useBuildStore((s) => s.step)
   const bricks = useBuildStore((s) => s.bricks)
   const addBrick = useBuildStore((s) => s.addBrick)
+  const undo = useBuildStore((s) => s.undo)
+  const redo = useBuildStore((s) => s.redo)
   const activeType = useBuildStore((s) => s.activeType)
   const activeColor = useBuildStore((s) => s.activeColor)
   const activeRotation = useBuildStore((s) => s.activeRotation)
   const rotateActive = useBuildStore((s) => s.rotateActive)
 
+  function recordPointerDown(e: ThreeEvent<PointerEvent>) {
+    pointerDownAt.current = [e.nativeEvent.clientX, e.nativeEvent.clientY]
+  }
+
+  function wasDrag(e: ThreeEvent<MouseEvent>): boolean {
+    const start = pointerDownAt.current
+    if (!start) return false
+    const dx = e.nativeEvent.clientX - start[0]
+    const dy = e.nativeEvent.clientY - start[1]
+    return Math.hypot(dx, dy) > DRAG_THRESHOLD_PX
+  }
+
   useEffect(() => {
     if (mode !== 'edit') return
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key.toLowerCase() === 'r') rotateActive()
+      if (e.key.toLowerCase() === 'r') {
+        rotateActive()
+        return
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mode, rotateActive])
+  }, [mode, rotateActive, undo, redo])
 
   const occupancy = useMemo(() => buildOccupancy(bricks), [bricks])
   const [activeFootprintX, activeFootprintZ] = effectiveFootprint(activeType, activeRotation)
@@ -83,6 +112,7 @@ export default function BuildScene() {
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
+        onPointerDown={recordPointerDown}
         onPointerMove={(e) => {
           e.stopPropagation()
           const [cx, cz] = cellFromPoint(e.point.x, e.point.z)
@@ -91,6 +121,7 @@ export default function BuildScene() {
         onPointerOut={() => setHovered(null)}
         onClick={(e) => {
           e.stopPropagation()
+          if (wasDrag(e)) return
           const [cx, cz] = cellFromPoint(e.point.x, e.point.z)
           tryPlace(cx, cz, 0)
         }}
@@ -121,6 +152,7 @@ export default function BuildScene() {
             footprintX={fx}
             footprintZ={fz}
             interactive
+            onColliderPointerDown={recordPointerDown}
             onColliderPointerMove={(e) => {
               e.stopPropagation()
               const [hx, hz] = hoverCellFromEvent(e)
@@ -129,6 +161,7 @@ export default function BuildScene() {
             onColliderPointerOut={() => setHovered(null)}
             onColliderClick={(e) => {
               e.stopPropagation()
+              if (wasDrag(e)) return
               const [hx, hz] = hoverCellFromEvent(e)
               tryPlace(hx, hz, layer + 1)
             }}
