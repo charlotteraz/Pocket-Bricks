@@ -23,8 +23,12 @@ export default function Scene() {
       <OrbitControls
         ref={controlsRef}
         maxPolarAngle={Math.PI / 2 - 0.05}
-        minDistance={3}
-        maxDistance={40}
+        minDistance={1.5}
+        maxDistance={120}
+        zoomSpeed={1.4}
+        enablePan
+        panSpeed={1.5}
+        screenSpacePanning
       />
     </Canvas>
   )

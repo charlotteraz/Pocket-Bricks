@@ -11,9 +11,9 @@ type BuildStore = {
   addBrick: (brick: Brick) => void
   loadBricks: (bricks: Brick[]) => void
 
-  // Which of the fixed sets (src/data/sets.ts) is currently loaded, if any --
-  // undefined once a brick's been placed/removed by hand or a custom file
-  // imported, since the bricks no longer necessarily match that set.
+  // Which of the fixed sets (src/data/sets.ts) is the current reference --
+  // shown in SetPreview, but deliberately not loaded onto the plate: the
+  // point is to look at it and build it yourself by hand.
   activeSetId: string | undefined
   loadSet: (id: string) => void
 
@@ -39,16 +39,18 @@ type BuildStore = {
 const ROTATIONS: Rotation[] = [0, 90, 180, 270]
 
 export const useBuildStore = create<BuildStore>((set) => ({
-  bricks: SETS[0].bricks,
-  addBrick: (brick) =>
-    set((state) => ({ bricks: [...state.bricks, brick], activeSetId: undefined })),
-  loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0, activeSetId: undefined }),
+  bricks: [],
+  addBrick: (brick) => set((state) => ({ bricks: [...state.bricks, brick] })),
+  loadBricks: (bricks) => set({ bricks, mode: 'edit', step: 0 }),
 
   activeSetId: SETS[0].id,
   loadSet: (id) => {
     const found = SETS.find((s) => s.id === id)
     if (!found) return
-    set({ bricks: found.bricks, activeSetId: id, mode: 'edit', step: 0 })
+    // Clears the plate rather than pre-building the set -- picking a set
+    // swaps the reference preview and gives you a fresh plate to build it
+    // on, it doesn't hand you the finished thing.
+    set({ bricks: [], activeSetId: id, mode: 'edit', step: 0 })
   },
 
   activeType: 'brick2x4',

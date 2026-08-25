@@ -1,6 +1,7 @@
 import Scene from './components/Scene'
 import Palette from './components/Palette'
 import PlaybackControls from './components/PlaybackControls'
+import SetPreview from './components/SetPreview'
 import StartScreen from './components/StartScreen'
 import { useBuildStore } from './store/useBuildStore'
 
@@ -11,7 +12,14 @@ function App() {
   return (
     <div className="relative h-full w-full">
       <Scene />
-      {mode === 'edit' ? <Palette /> : <PlaybackControls />}
+      {mode === 'edit' ? (
+        <>
+          <Palette />
+          <SetPreview />
+        </>
+      ) : (
+        <PlaybackControls />
+      )}
       {!started && <StartScreen />}
     </div>
   )
