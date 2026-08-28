@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
-import { GRID_SIZE, STUD, cellFromPoint, clampToBaseplate } from '../lib/grid'
+import { STUD, cellFromPoint, clampToBaseplate } from '../lib/grid'
 import { effectiveFootprint } from '../lib/bricks'
 import { buildOccupancy, hasCollision, layerFromY, yFromLayer } from '../lib/occupancy'
 import { playSnapSound } from '../lib/sound'
+import { SETS } from '../data/sets'
 import { useBuildStore } from '../store/useBuildStore'
+import Baseplate from './bricks/Baseplate'
 import Brick from './bricks/Brick'
 import PlacedBrick from './bricks/PlacedBrick'
 
@@ -22,6 +24,7 @@ export default function BuildScene() {
   const mode = useBuildStore((s) => s.mode)
   const step = useBuildStore((s) => s.step)
   const bricks = useBuildStore((s) => s.bricks)
+  const activeSetId = useBuildStore((s) => s.activeSetId)
   const addBrick = useBuildStore((s) => s.addBrick)
   const undo = useBuildStore((s) => s.undo)
   const redo = useBuildStore((s) => s.redo)
@@ -83,16 +86,16 @@ export default function BuildScene() {
     hasCollision(occupancy, anchor[0], anchor[1], activeFootprintX, activeFootprintZ, hovered.layer)
 
   if (mode === 'playback') {
-    const targetBrick = bricks[step]
+    // Instructions walk through the active set's own bricks, not whatever
+    // the builder has placed on the plate -- a how-to-build guide for the
+    // reference set, usable before you've placed a single brick yourself.
+    const instructionBricks = SETS.find((s) => s.id === activeSetId)?.bricks ?? []
+    const targetBrick = instructionBricks[step]
     return (
       <>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
-          <meshStandardMaterial color="#e5e4e7" />
-        </mesh>
-        <gridHelper args={[GRID_SIZE, GRID_SIZE, '#999999', '#bbbbbb']} />
+        <Baseplate />
 
-        {bricks.slice(0, step).map((brick, i) => {
+        {instructionBricks.slice(0, step).map((brick, i) => {
           const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)
           return <PlacedBrick key={i} brick={brick} footprintX={fx} footprintZ={fz} />
         })}
@@ -113,9 +116,8 @@ export default function BuildScene() {
 
   return (
     <>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
+      <Baseplate
+        interactive
         onPointerDown={recordPointerDown}
         onPointerMove={(e) => {
           e.stopPropagation()
@@ -129,11 +131,7 @@ export default function BuildScene() {
           const [cx, cz] = cellFromPoint(e.point.x, e.point.z)
           tryPlace(cx, cz, 0)
         }}
-      >
-        <planeGeometry args={[GRID_SIZE, GRID_SIZE]} />
-        <meshStandardMaterial color="#e5e4e7" />
-      </mesh>
-      <gridHelper args={[GRID_SIZE, GRID_SIZE, '#999999', '#bbbbbb']} />
+      />
 
       {bricks.map((brick, i) => {
         const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)

@@ -1,53 +1,51 @@
 import { playSnapSound } from '../lib/sound'
+import { SETS } from '../data/sets'
 import { useBuildStore } from '../store/useBuildStore'
 
 export default function PlaybackControls() {
   const step = useBuildStore((s) => s.step)
-  const bricks = useBuildStore((s) => s.bricks)
+  const activeSetId = useBuildStore((s) => s.activeSetId)
   const nextStep = useBuildStore((s) => s.nextStep)
   const prevStep = useBuildStore((s) => s.prevStep)
   const exitPlayback = useBuildStore((s) => s.exitPlayback)
 
-  const total = bricks.length
+  const total = SETS.find((s) => s.id === activeSetId)?.bricks.length ?? 0
   const done = step >= total
 
   return (
-    <div
-      className={`absolute top-4 left-4 z-10 flex w-56 flex-col gap-3 rounded-lg p-4 shadow-lg backdrop-blur ${
-        done ? 'bg-green-50/90' : 'bg-white/90'
-      }`}
-    >
-      <h2 className={`text-sm font-semibold ${done ? 'text-green-700' : 'text-neutral-700'}`}>
-        {done ? '✓ Build complete' : `Step ${step + 1} of ${total}`}
-      </h2>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={prevStep}
-          disabled={step === 0}
-          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            nextStep()
-            playSnapSound()
-          }}
-          disabled={done}
-          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
-        >
-          Next
+    <div className="pixel-panel fixed inset-x-0 bottom-0 z-10 w-full overflow-hidden sm:absolute sm:inset-x-auto sm:top-4 sm:left-4 sm:bottom-auto sm:w-60">
+      <div
+        className="pixel-titlebar"
+        style={done ? { background: 'var(--color-green)' } : undefined}
+      >
+        <span>{done ? 'Build complete' : `Step ${step + 1} of ${total}`}</span>
+        <span className="pixel-dots">
+          <span />
+          <span />
+          <span />
+        </span>
+      </div>
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex gap-2">
+          <button type="button" onClick={prevStep} disabled={step === 0} className="pixel-btn flex-1">
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              nextStep()
+              playSnapSound()
+            }}
+            disabled={done}
+            className="pixel-btn flex-1"
+          >
+            Next
+          </button>
+        </div>
+        <button type="button" onClick={exitPlayback} className="pixel-btn w-full">
+          Back to editing
         </button>
       </div>
-      <button
-        type="button"
-        onClick={exitPlayback}
-        className="w-full rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:border-neutral-500"
-      >
-        Back to editing
-      </button>
     </div>
   )
 }

@@ -108,65 +108,78 @@ export default function SetPreview() {
         onClick={() => setExpanded(true)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className={`absolute top-4 right-4 z-10 rounded-lg bg-white/90 p-3 text-left shadow-lg backdrop-blur transition-[width,height] duration-200 ease-out ${
-          hovered ? 'w-72' : 'w-44'
+        className={`pixel-panel absolute top-4 right-4 z-10 overflow-hidden text-left transition-[width] duration-200 ease-out ${
+          hovered ? 'w-72' : 'w-32 sm:w-44'
         }`}
       >
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Reference</h2>
-        <div
-          className={`w-full overflow-hidden rounded border border-neutral-200 bg-neutral-100 transition-[height] duration-200 ease-out ${
-            hovered ? 'h-60' : 'h-36'
-          }`}
-        >
-          <ReferenceScene
-            key={set.id}
-            bricks={set.bricks}
-            center={center}
-            distance={distance}
-            interactive={false}
-            autoRotateSpeed={4}
-          />
+        <div className="pixel-titlebar">
+          <span>Reference</span>
+          <span className="pixel-dots">
+            <span />
+            <span />
+            <span />
+          </span>
         </div>
-        <p className="mt-2 text-[11px] leading-snug text-neutral-500">
-          {set.name} — {set.bricks.length} bricks. Click to inspect, or build it yourself on the
-          plate.
-        </p>
+        <div className="p-3">
+          <div
+            className={`pixel-inset w-full overflow-hidden transition-[height] duration-200 ease-out ${
+              hovered ? 'h-60' : 'h-36'
+            }`}
+          >
+            <ReferenceScene
+              key={set.id}
+              bricks={set.bricks}
+              center={center}
+              distance={distance}
+              interactive={false}
+              autoRotateSpeed={4}
+            />
+          </div>
+          <p className="mt-2 hidden text-base leading-snug sm:block">
+            {set.name} — {set.bricks.length} bricks. Click to inspect, or build it yourself on the
+            plate.
+          </p>
+        </div>
       </button>
 
       {expanded && (
         <div
-          className="fixed inset-0 z-30 flex items-center justify-center bg-neutral-900/70 backdrop-blur-sm"
+          className="fixed inset-0 z-30 flex items-center justify-center bg-[var(--color-ink)]/70"
           onClick={() => setExpanded(false)}
         >
           <div
-            className="flex w-[min(90vw,640px)] flex-col gap-3 rounded-lg bg-white p-4 shadow-xl"
+            className="pixel-panel flex w-[min(90vw,640px)] flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-neutral-800">
+            <div className="pixel-titlebar">
+              <span>
                 {set.name} — {set.bricks.length} bricks
-              </h2>
+              </span>
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
                 aria-label="Close"
-                className="rounded px-2 py-1 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
+                className="pixel-dots cursor-pointer"
               >
-                ✕
+                <span style={{ background: 'var(--color-red)' }} />
+                <span style={{ background: 'var(--color-yellow)' }} />
+                <span style={{ background: 'var(--color-green)' }} />
               </button>
             </div>
-            <div className="h-[min(70vh,520px)] w-full overflow-hidden rounded border border-neutral-200 bg-neutral-100">
-              <ReferenceScene
-                key={set.id}
-                bricks={set.bricks}
-                center={center}
-                distance={distance}
-                interactive
-              />
+            <div className="flex flex-col gap-3 p-4">
+              <div className="pixel-inset h-[min(70vh,520px)] w-full overflow-hidden">
+                <ReferenceScene
+                  key={set.id}
+                  bricks={set.bricks}
+                  center={center}
+                  distance={distance}
+                  interactive
+                />
+              </div>
+              <p className="text-base">
+                Drag to rotate, scroll to zoom. Close and build it yourself on the plate.
+              </p>
             </div>
-            <p className="text-xs text-neutral-500">
-              Drag to rotate, scroll to zoom. Close and build it yourself on the plate.
-            </p>
           </div>
         </div>
       )}

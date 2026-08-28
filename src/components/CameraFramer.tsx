@@ -5,6 +5,7 @@ import type { OrbitControls } from 'three-stdlib'
 import { useBuildStore } from '../store/useBuildStore'
 import { effectiveFootprint } from '../lib/bricks'
 import { STUD, BRICK_HEIGHT } from '../lib/grid'
+import { SETS } from '../data/sets'
 
 export type OrbitControlsHandle = OrbitControls
 
@@ -16,13 +17,13 @@ type Props = { controlsRef: React.RefObject<OrbitControlsHandle | null> }
 export default function CameraFramer({ controlsRef }: Props) {
   const mode = useBuildStore((s) => s.mode)
   const step = useBuildStore((s) => s.step)
-  const bricks = useBuildStore((s) => s.bricks)
+  const activeSetId = useBuildStore((s) => s.activeSetId)
   const target = useRef(new THREE.Vector3())
 
   useFrame(() => {
     const controls = controlsRef.current
     if (!controls || mode !== 'playback') return
-    const brick = bricks[step]
+    const brick = SETS.find((s) => s.id === activeSetId)?.bricks[step]
     if (!brick) return
 
     const [fx, fz] = effectiveFootprint(brick.type, brick.rotation)

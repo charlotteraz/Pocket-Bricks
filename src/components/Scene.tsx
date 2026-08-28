@@ -8,7 +8,8 @@ export default function Scene() {
   const controlsRef = useRef<OrbitControlsHandle>(null)
 
   return (
-    <Canvas camera={{ position: [8, 8, 8], fov: 45 }} shadows>
+    <Canvas camera={{ position: [8, 8, 8], fov: 45, near: 0.5, far: 400 }} shadows>
+      <color attach="background" args={['#c9d6f5']} />
       {/* Soft studio lighting: a bright, low ambient plus one shadow-casting
           key light and two dim fill/rim lights so nothing goes fully dark. */}
       <ambientLight intensity={0.65} />

@@ -10,6 +10,7 @@ type BuildStore = {
   bricks: Brick[]
   addBrick: (brick: Brick) => void
   loadBricks: (bricks: Brick[]) => void
+  clearBricks: () => void
 
   // Undo/redo over `bricks` as a whole -- each entry is a prior snapshot of
   // the array (placement, import, or set switch all push one), not a diff,
@@ -32,7 +33,9 @@ type BuildStore = {
   setActiveColor: (color: string) => void
   rotateActive: () => void
 
-  // Instructions playback: steps through `bricks` in placement order.
+  // Instructions playback: steps through the active set's own bricks in
+  // placement order -- a how-to-build walkthrough of the reference set,
+  // independent of whatever the builder has placed on the plate themselves.
   mode: Mode
   step: number
   enterPlayback: () => void
@@ -62,6 +65,15 @@ export const useBuildStore = create<BuildStore>((set) => ({
       mode: 'edit',
       step: 0,
     })),
+  clearBricks: () =>
+    set((state) => {
+      if (state.bricks.length === 0) return state
+      return {
+        bricks: [],
+        undoStack: [...state.undoStack, state.bricks],
+        redoStack: [],
+      }
+    }),
 
   undoStack: [],
   redoStack: [],
@@ -118,7 +130,11 @@ export const useBuildStore = create<BuildStore>((set) => ({
   step: 0,
   enterPlayback: () => set({ mode: 'playback', step: 0 }),
   exitPlayback: () => set({ mode: 'edit' }),
-  nextStep: () => set((state) => ({ step: Math.min(state.step + 1, state.bricks.length) })),
+  nextStep: () =>
+    set((state) => {
+      const total = SETS.find((s) => s.id === state.activeSetId)?.bricks.length ?? 0
+      return { step: Math.min(state.step + 1, total) }
+    }),
   prevStep: () => set((state) => ({ step: Math.max(state.step - 1, 0) })),
 
   started: false,

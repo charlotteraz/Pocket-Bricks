@@ -18,148 +18,155 @@ export default function Palette() {
   const canRedo = useBuildStore((s) => s.redoStack.length > 0)
   const undo = useBuildStore((s) => s.undo)
   const redo = useBuildStore((s) => s.redo)
+  const clearBricks = useBuildStore((s) => s.clearBricks)
   const activeSetId = useBuildStore((s) => s.activeSetId)
   const loadSet = useBuildStore((s) => s.loadSet)
   const enterPlayback = useBuildStore((s) => s.enterPlayback)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const activeSet = SETS.find((s) => s.id === activeSetId)
 
   return (
-    <div className="absolute top-4 left-4 z-10 flex w-56 flex-col gap-4 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur">
-      <div>
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Set</h2>
-        <div className="flex flex-col gap-2">
-          {SETS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => loadSet(s.id)}
-              className={`rounded border px-2 py-2 text-left text-xs font-medium transition-colors ${
-                activeSetId === s.id
-                  ? 'border-neutral-800 bg-neutral-800 text-white'
-                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500'
-              }`}
-            >
-              {s.name} <span className="opacity-60">({s.bricks.length})</span>
-            </button>
-          ))}
+    <div className="pixel-panel fixed inset-x-0 bottom-0 z-10 flex max-h-[62vh] w-full flex-col overflow-hidden sm:absolute sm:inset-x-auto sm:top-4 sm:left-4 sm:bottom-auto sm:w-60 sm:max-h-none">
+      <div className="pixel-titlebar shrink-0">
+        <span>Pocket Bricks</span>
+        <span className="pixel-dots">
+          <span />
+          <span />
+          <span />
+        </span>
+      </div>
+      <div className="flex flex-col gap-4 overflow-y-auto p-4 sm:overflow-visible">
+        <div>
+          <h2 className="pixel-label mb-2">Set</h2>
+          <div className="flex flex-wrap gap-2">
+            {SETS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => loadSet(s.id)}
+                className={`pixel-btn whitespace-nowrap ${activeSetId === s.id ? 'pixel-btn-active' : ''}`}
+              >
+                {s.name} <span className="opacity-60">({s.bricks.length})</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Bricks</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {SHAPES.map((def) => (
-            <button
-              key={def.type}
-              type="button"
-              onClick={() => setActiveType(def.type)}
-              className={`rounded border px-2 py-2 text-xs font-medium transition-colors ${
-                activeType === def.type
-                  ? 'border-neutral-800 bg-neutral-800 text-white'
-                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500'
-              }`}
-            >
-              {def.label}
-            </button>
-          ))}
+        <div>
+          <h2 className="pixel-label mb-2">Bricks</h2>
+          <div className="flex flex-wrap gap-2">
+            {SHAPES.map((def) => (
+              <button
+                key={def.type}
+                type="button"
+                onClick={() => setActiveType(def.type)}
+                className={`pixel-btn whitespace-nowrap ${activeType === def.type ? 'pixel-btn-active' : ''}`}
+              >
+                {def.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Color</h2>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.map((c) => (
-            <button
-              key={c.hex}
-              type="button"
-              title={c.name}
-              aria-label={c.name}
-              onClick={() => setActiveColor(c.hex)}
-              style={{ backgroundColor: c.hex }}
-              className={`h-7 w-7 rounded-full border-2 shadow transition-transform ${
-                activeColor === c.hex ? 'scale-110 border-neutral-800' : 'border-white'
-              }`}
-            />
-          ))}
+        <div>
+          <h2 className="pixel-label mb-2">Color</h2>
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((c) => (
+              <button
+                key={c.hex}
+                type="button"
+                title={c.name}
+                aria-label={c.name}
+                onClick={() => setActiveColor(c.hex)}
+                style={{ backgroundColor: c.hex }}
+                className={`pixel-swatch ${activeColor === c.hex ? 'pixel-swatch-active' : ''}`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Rotation</h2>
-        <button
-          type="button"
-          onClick={rotateActive}
-          className="w-full rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:border-neutral-500"
-        >
-          {activeRotation}° — press R to rotate
-        </button>
-      </div>
+        <div>
+          <h2 className="pixel-label mb-2">Rotation</h2>
+          <button type="button" onClick={rotateActive} className="pixel-btn w-full">
+            {activeRotation}° — press R to rotate
+          </button>
+        </div>
 
-      <div className="flex gap-2 border-t border-neutral-200 pt-3">
-        <button
-          type="button"
-          onClick={undo}
-          disabled={!canUndo}
-          title="Undo (Ctrl/Cmd+Z)"
-          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
-        >
-          Undo
-        </button>
-        <button
-          type="button"
-          onClick={redo}
-          disabled={!canRedo}
-          title="Redo (Ctrl/Cmd+Shift+Z)"
-          className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
-        >
-          Redo
-        </button>
-      </div>
+        <div className="flex gap-2 border-t-[3px] border-[var(--color-ink)] pt-3">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl/Cmd+Z)"
+            className="pixel-btn flex-1"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl/Cmd+Shift+Z)"
+            className="pixel-btn flex-1"
+          >
+            Redo
+          </button>
+        </div>
 
-      <div className="flex flex-col gap-2 border-t border-neutral-200 pt-3">
         <button
           type="button"
-          onClick={enterPlayback}
+          onClick={clearBricks}
           disabled={bricks.length === 0}
-          className="w-full rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+          className="pixel-btn w-full"
         >
-          Play instructions ({bricks.length} bricks)
+          Clear plate
         </button>
-        <div className="flex gap-2">
+
+        <div className="flex flex-col gap-2 border-t-[3px] border-[var(--color-ink)] pt-3">
           <button
             type="button"
-            onClick={() => downloadBuild(bricks)}
-            disabled={bricks.length === 0}
-            className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:enabled:border-neutral-500 disabled:opacity-40"
+            onClick={enterPlayback}
+            disabled={!activeSet || activeSet.bricks.length === 0}
+            className="pixel-btn w-full"
           >
-            Export
+            Play instructions ({activeSet?.bricks.length ?? 0} bricks)
           </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 rounded border border-neutral-300 bg-white px-2 py-2 text-xs font-medium text-neutral-700 hover:border-neutral-500"
-          >
-            Import
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => downloadBuild(bricks)}
+              disabled={bricks.length === 0}
+              className="pixel-btn flex-1"
+            >
+              Export
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="pixel-btn flex-1"
+            >
+              Import
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              try {
+                const text = await file.text()
+                loadBricks(parseBuild(text))
+              } catch (err) {
+                window.alert(`Couldn't load that file: ${err instanceof Error ? err.message : String(err)}`)
+              } finally {
+                e.target.value = ''
+              }
+            }}
+          />
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json"
-          className="hidden"
-          onChange={async (e) => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            try {
-              const text = await file.text()
-              loadBricks(parseBuild(text))
-            } catch (err) {
-              window.alert(`Couldn't load that file: ${err instanceof Error ? err.message : String(err)}`)
-            } finally {
-              e.target.value = ''
-            }
-          }}
-        />
       </div>
     </div>
   )
