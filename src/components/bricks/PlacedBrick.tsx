@@ -10,6 +10,7 @@ type Props = {
   footprintX: number
   footprintZ: number
   interactive?: boolean
+  highlighted?: boolean
   onColliderPointerDown?: (e: ThreeEvent<PointerEvent>) => void
   onColliderPointerMove?: (e: ThreeEvent<PointerEvent>) => void
   onColliderPointerOut?: () => void
@@ -27,6 +28,7 @@ export default function PlacedBrick({
   footprintX,
   footprintZ,
   interactive = false,
+  highlighted = false,
   onColliderPointerDown,
   onColliderPointerMove,
   onColliderPointerOut,
@@ -45,7 +47,7 @@ export default function PlacedBrick({
 
   return (
     <group ref={groupRef} position={brick.position}>
-      <Brick type={brick.type} rotation={brick.rotation} color={brick.color} />
+      <Brick type={brick.type} rotation={brick.rotation} color={highlighted ? '#ff3b3b' : brick.color} />
       {interactive && (
         <mesh
           position={[(footprintX * STUD) / 2, BRICK_HEIGHT / 2, (footprintZ * STUD) / 2]}

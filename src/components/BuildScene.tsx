@@ -3,7 +3,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { STUD, cellFromPoint, clampToBaseplate } from '../lib/grid'
 import { effectiveFootprint } from '../lib/bricks'
 import { buildOccupancy, hasCollision, layerFromY, yFromLayer } from '../lib/occupancy'
-import { playSnapSound } from '../lib/sound'
+import { playRemoveSound, playSnapSound } from '../lib/sound'
 import { SETS } from '../data/sets'
 import { useBuildStore } from '../store/useBuildStore'
 import Baseplate from './bricks/Baseplate'
@@ -20,18 +20,22 @@ const DRAG_THRESHOLD_PX = 6
 
 export default function BuildScene() {
   const [hovered, setHovered] = useState<HoverCell | null>(null)
+  const [hoveredBrickIndex, setHoveredBrickIndex] = useState<number | null>(null)
   const pointerDownAt = useRef<[number, number] | null>(null)
   const mode = useBuildStore((s) => s.mode)
   const step = useBuildStore((s) => s.step)
   const bricks = useBuildStore((s) => s.bricks)
   const activeSetId = useBuildStore((s) => s.activeSetId)
   const addBrick = useBuildStore((s) => s.addBrick)
+  const removeBrick = useBuildStore((s) => s.removeBrick)
   const undo = useBuildStore((s) => s.undo)
   const redo = useBuildStore((s) => s.redo)
   const activeType = useBuildStore((s) => s.activeType)
   const activeColor = useBuildStore((s) => s.activeColor)
   const activeRotation = useBuildStore((s) => s.activeRotation)
   const rotateActive = useBuildStore((s) => s.rotateActive)
+  const deleteMode = useBuildStore((s) => s.deleteMode)
+  const toggleDeleteMode = useBuildStore((s) => s.toggleDeleteMode)
 
   function recordPointerDown(e: ThreeEvent<PointerEvent>) {
     pointerDownAt.current = [e.nativeEvent.clientX, e.nativeEvent.clientY]
@@ -52,6 +56,10 @@ export default function BuildScene() {
         rotateActive()
         return
       }
+      if (e.key.toLowerCase() === 'x') {
+        toggleDeleteMode()
+        return
+      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault()
         if (e.shiftKey) redo()
@@ -60,7 +68,7 @@ export default function BuildScene() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mode, rotateActive, undo, redo])
+  }, [mode, rotateActive, undo, redo, toggleDeleteMode])
 
   const occupancy = useMemo(() => buildOccupancy(bricks), [bricks])
   const [activeFootprintX, activeFootprintZ] = effectiveFootprint(activeType, activeRotation)
@@ -77,9 +85,12 @@ export default function BuildScene() {
     playSnapSound()
   }
 
-  const anchor = hovered
-    ? clampToBaseplate(hovered.cellX, hovered.cellZ, activeFootprintX, activeFootprintZ)
-    : null
+  // No placement preview while the delete tool is active -- nothing gets
+  // placed there, so a ghost brick would only be misleading.
+  const anchor =
+    hovered && !deleteMode
+      ? clampToBaseplate(hovered.cellX, hovered.cellZ, activeFootprintX, activeFootprintZ)
+      : null
   const blocked =
     hovered !== null &&
     anchor !== null &&
@@ -127,7 +138,7 @@ export default function BuildScene() {
         onPointerOut={() => setHovered(null)}
         onClick={(e) => {
           e.stopPropagation()
-          if (wasDrag(e)) return
+          if (wasDrag(e) || deleteMode) return
           const [cx, cz] = cellFromPoint(e.point.x, e.point.z)
           tryPlace(cx, cz, 0)
         }}
@@ -154,16 +165,27 @@ export default function BuildScene() {
             footprintX={fx}
             footprintZ={fz}
             interactive
+            highlighted={deleteMode && hoveredBrickIndex === i}
             onColliderPointerDown={recordPointerDown}
             onColliderPointerMove={(e) => {
               e.stopPropagation()
+              setHoveredBrickIndex(i)
               const [hx, hz] = hoverCellFromEvent(e)
               setHovered({ cellX: hx, cellZ: hz, layer: layer + 1 })
             }}
-            onColliderPointerOut={() => setHovered(null)}
+            onColliderPointerOut={() => {
+              setHoveredBrickIndex((current) => (current === i ? null : current))
+              setHovered(null)
+            }}
             onColliderClick={(e) => {
               e.stopPropagation()
               if (wasDrag(e)) return
+              if (deleteMode) {
+                removeBrick(i)
+                setHoveredBrickIndex(null)
+                playRemoveSound()
+                return
+              }
               const [hx, hz] = hoverCellFromEvent(e)
               tryPlace(hx, hz, layer + 1)
             }}

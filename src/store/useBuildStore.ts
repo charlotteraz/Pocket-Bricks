@@ -9,12 +9,12 @@ type Mode = 'edit' | 'playback'
 type BuildStore = {
   bricks: Brick[]
   addBrick: (brick: Brick) => void
-  loadBricks: (bricks: Brick[]) => void
+  removeBrick: (index: number) => void
   clearBricks: () => void
 
   // Undo/redo over `bricks` as a whole -- each entry is a prior snapshot of
-  // the array (placement, import, or set switch all push one), not a diff,
-  // since builds are small enough that whole-array snapshots are cheap.
+  // the array (placement or set switch both push one), not a diff, since
+  // builds are small enough that whole-array snapshots are cheap.
   undoStack: Brick[][]
   redoStack: Brick[][]
   undo: () => void
@@ -32,6 +32,12 @@ type BuildStore = {
   setActiveType: (type: ShapeId) => void
   setActiveColor: (color: string) => void
   rotateActive: () => void
+
+  // Delete is a tool like the brick shapes, not a modifier key -- so it
+  // works the same whether you're clicking with a mouse or tapping on a
+  // touchscreen. Picking a brick shape switches back out of it.
+  deleteMode: boolean
+  toggleDeleteMode: () => void
 
   // Instructions playback: steps through the active set's own bricks in
   // placement order -- a how-to-build walkthrough of the reference set,
@@ -57,14 +63,17 @@ export const useBuildStore = create<BuildStore>((set) => ({
       undoStack: [...state.undoStack, state.bricks],
       redoStack: [],
     })),
-  loadBricks: (bricks) =>
-    set((state) => ({
-      bricks,
-      undoStack: [...state.undoStack, state.bricks],
-      redoStack: [],
-      mode: 'edit',
-      step: 0,
-    })),
+  removeBrick: (index) =>
+    set((state) => {
+      if (index < 0 || index >= state.bricks.length) return state
+      const next = state.bricks.filter((_, i) => i !== index)
+      return {
+        bricks: next,
+        undoStack: [...state.undoStack, state.bricks],
+        redoStack: [],
+        deleteMode: next.length === 0 ? false : state.deleteMode,
+      }
+    }),
   clearBricks: () =>
     set((state) => {
       if (state.bricks.length === 0) return state
@@ -112,19 +121,23 @@ export const useBuildStore = create<BuildStore>((set) => ({
       activeSetId: id,
       mode: 'edit',
       step: 0,
+      deleteMode: false,
     }))
   },
 
   activeType: 'brick2x4',
   activeColor: COLORS[0].hex,
   activeRotation: 0,
-  setActiveType: (type) => set({ activeType: type }),
+  setActiveType: (type) => set({ activeType: type, deleteMode: false }),
   setActiveColor: (color) => set({ activeColor: color }),
   rotateActive: () =>
     set((state) => ({
       activeRotation:
         ROTATIONS[(ROTATIONS.indexOf(state.activeRotation) + 1) % ROTATIONS.length],
     })),
+
+  deleteMode: false,
+  toggleDeleteMode: () => set((state) => ({ deleteMode: !state.deleteMode })),
 
   mode: 'edit',
   step: 0,

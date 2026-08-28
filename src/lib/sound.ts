@@ -21,3 +21,25 @@ export function playSnapSound() {
     // Audio unavailable (e.g. blocked before any gesture) -- skip silently.
   }
 }
+
+// A lower, slightly longer thud for removing a brick -- distinct from the
+// snap so the two are easy to tell apart by ear alone.
+export function playRemoveSound() {
+  try {
+    audioCtx ??= new AudioContext()
+    const ctx = audioCtx
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(320, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.14)
+    gain.gain.setValueAtTime(0.15, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16)
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.18)
+  } catch {
+    // Audio unavailable (e.g. blocked before any gesture) -- skip silently.
+  }
+}

@@ -1,7 +1,5 @@
-import { useRef } from 'react'
 import { SHAPES } from '../lib/bricks'
 import { COLORS } from '../lib/colors'
-import { downloadBuild, parseBuild } from '../lib/io'
 import { SETS } from '../data/sets'
 import { useBuildStore } from '../store/useBuildStore'
 
@@ -13,7 +11,6 @@ export default function Palette() {
   const setActiveColor = useBuildStore((s) => s.setActiveColor)
   const rotateActive = useBuildStore((s) => s.rotateActive)
   const bricks = useBuildStore((s) => s.bricks)
-  const loadBricks = useBuildStore((s) => s.loadBricks)
   const canUndo = useBuildStore((s) => s.undoStack.length > 0)
   const canRedo = useBuildStore((s) => s.redoStack.length > 0)
   const undo = useBuildStore((s) => s.undo)
@@ -22,11 +19,12 @@ export default function Palette() {
   const activeSetId = useBuildStore((s) => s.activeSetId)
   const loadSet = useBuildStore((s) => s.loadSet)
   const enterPlayback = useBuildStore((s) => s.enterPlayback)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const deleteMode = useBuildStore((s) => s.deleteMode)
+  const toggleDeleteMode = useBuildStore((s) => s.toggleDeleteMode)
   const activeSet = SETS.find((s) => s.id === activeSetId)
 
   return (
-    <div className="pixel-panel fixed inset-x-0 bottom-0 z-10 flex max-h-[62vh] w-full flex-col overflow-hidden sm:absolute sm:inset-x-auto sm:top-4 sm:left-4 sm:bottom-auto sm:w-60 sm:max-h-none">
+    <div className="pixel-panel fixed inset-x-0 bottom-0 z-10 flex max-h-[62vh] w-full flex-col overflow-hidden sm:absolute sm:inset-x-auto sm:top-4 sm:left-4 sm:bottom-auto sm:max-h-[calc(100dvh-2rem)] sm:w-60">
       <div className="pixel-titlebar shrink-0">
         <span>Pocket Bricks</span>
         <span className="pixel-dots">
@@ -35,7 +33,7 @@ export default function Palette() {
           <span />
         </span>
       </div>
-      <div className="flex flex-col gap-4 overflow-y-auto p-4 sm:overflow-visible">
+      <div className="flex flex-col gap-4 overflow-y-auto p-4">
         <div>
           <h2 className="pixel-label mb-2">Set</h2>
           <div className="flex flex-wrap gap-2">
@@ -92,6 +90,16 @@ export default function Palette() {
           </button>
         </div>
 
+        <button
+          type="button"
+          onClick={toggleDeleteMode}
+          disabled={bricks.length === 0}
+          title="Toggle delete tool (press X)"
+          className={`pixel-btn w-full ${deleteMode ? 'pixel-btn-active' : ''}`}
+        >
+          {deleteMode ? 'Deleting — click a brick' : 'Delete brick — press X'}
+        </button>
+
         <div className="flex gap-2 border-t-[3px] border-[var(--color-ink)] pt-3">
           <button
             type="button"
@@ -122,7 +130,7 @@ export default function Palette() {
           Clear plate
         </button>
 
-        <div className="flex flex-col gap-2 border-t-[3px] border-[var(--color-ink)] pt-3">
+        <div className="border-t-[3px] border-[var(--color-ink)] pt-3">
           <button
             type="button"
             onClick={enterPlayback}
@@ -131,41 +139,6 @@ export default function Palette() {
           >
             Play instructions ({activeSet?.bricks.length ?? 0} bricks)
           </button>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => downloadBuild(bricks)}
-              disabled={bricks.length === 0}
-              className="pixel-btn flex-1"
-            >
-              Export
-            </button>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="pixel-btn flex-1"
-            >
-              Import
-            </button>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              try {
-                const text = await file.text()
-                loadBricks(parseBuild(text))
-              } catch (err) {
-                window.alert(`Couldn't load that file: ${err instanceof Error ? err.message : String(err)}`)
-              } finally {
-                e.target.value = ''
-              }
-            }}
-          />
         </div>
       </div>
     </div>
